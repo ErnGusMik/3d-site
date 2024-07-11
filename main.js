@@ -1,4 +1,4 @@
-// Please note: this is my first time creating a 3d website, I am learning, hence the slow progress
+// Please note: this is my first time creating a 3d website, I am learning, hence the slow progress :)
 import * as THREE from "three";
 
 const scene = new THREE.Scene();
@@ -50,7 +50,7 @@ const createLines = (width, height) => {
 };
 
 const getLeftField = (width, height) => {
-    const field = new THREE.Shape()
+    const field = new THREE.Shape();
 
     field.moveTo(-width, -height);
     field.lineTo(-width, height);
@@ -58,10 +58,10 @@ const getLeftField = (width, height) => {
     field.lineTo(-120, -height);
 
     return field;
-}
+};
 
 const getRightField = (width, height) => {
-    const field = new THREE.Shape()
+    const field = new THREE.Shape();
 
     field.moveTo(width, -height);
     field.lineTo(width, height);
@@ -69,33 +69,31 @@ const getRightField = (width, height) => {
     field.lineTo(+120, -height);
 
     return field;
-}
-
-const renderMap = (width, height) => {
-    const lineMarkings = createLines(width, height);
-    const planeGeometry = new THREE.PlaneGeometry(width, height);
-    const planeMaterial = new THREE.MeshLambertMaterial({ map: lineMarkings });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    scene.add(plane);
-
-    // Get fields
-
-    const leftField = getLeftField(width, height);
-    const rightField = getRightField(width, height);
-    
-    const fieldGeometry = new THREE.ExtrudeGeometry([leftField, rightField], {
-        depth: 6,
-        bevelEnabled: false,
-    });
-
-    const fieldMesh = new THREE.Mesh(fieldGeometry, [
-        new THREE.MeshLambertMaterial({ color: 0x67c240 }),
-        new THREE.MeshLambertMaterial({ color: 0x23311c }),
-    ]);
-    scene.add(fieldMesh);
 };
 
-renderMap(cameraWidth, cameraHeight * 2);
+const width = cameraWidth;
+const height = cameraHeight * 2;
+const lineMarkings = createLines(width, height);
+const planeGeometry = new THREE.PlaneGeometry(width, height);
+const planeMaterial = new THREE.MeshLambertMaterial({ map: lineMarkings });
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+scene.add(plane);
+
+// Get fields
+
+const leftField = getLeftField(width, height);
+const rightField = getRightField(width, height);
+
+const fieldGeometry = new THREE.ExtrudeGeometry([leftField, rightField], {
+    depth: 6,
+    bevelEnabled: false,
+});
+
+const fieldMesh = new THREE.Mesh(fieldGeometry, [
+    new THREE.MeshLambertMaterial({ color: 0x67c240 }),
+    new THREE.MeshLambertMaterial({ color: 0x23311c }),
+]);
+scene.add(fieldMesh);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -190,21 +188,38 @@ const getCarSideTexture = () => {
 
 // Render
 const car = createCar(0xa52523);
-car.position.y = -500;
+car.position.y = -window.innerHeight / 2 + 150;
 car.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 2);
 scene.add(car);
 
-// renderer.render(scene, camera);
 
+const animation = (height) => {
+    // Animate plane texture so it moves downward infinitely
+    plane.material.map.offset.y += 0.005;
+    // Make sure texture doesn't end
+    plane.material.map.wrapS = THREE.RepeatWrapping;
+    plane.material.map.wrapT = THREE.RepeatWrapping;
 
-const animation = () => {
-    car.position.y += 0.05;
-    if (car.position.y > 500) {
-        car.position.y = -500;
+    if (car.position.y > height / 2 - 30) {
+        car.position.y = -height / 2 + 30;
+    }
+
+    if (keyState[37] || keyState[65]){
+        x -= 1;
+    }    
+    if (keyState[39] || keyState[68]){
+        x += 1;
     }
 
     renderer.render(scene, camera);
-    requestAnimationFrame(animation);
-}
+};
 
-renderer.setAnimationLoop(animation);
+renderer.setAnimationLoop(() => animation(window.innerHeight));
+
+var keyState = {};    
+window.addEventListener('keydown',function(e){
+    keyState[e.keyCode || e.which] = true;
+},true);    
+window.addEventListener('keyup',function(e){
+    keyState[e.keyCode || e.which] = false;
+},true);
