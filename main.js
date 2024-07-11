@@ -1,4 +1,8 @@
 // Please note: this is my first time creating a 3d website, I am learning, hence the slow progress :)
+
+// TODO: increase speed over time
+// TODO: add score counter
+// TODO: add game start & over screens
 import * as THREE from "three";
 
 const scene = new THREE.Scene();
@@ -191,14 +195,46 @@ const car = createCar(0xa52523);
 car.position.y = -window.innerHeight / 2 + 150;
 scene.add(car);
 
-let visibleCars = [createCar(0x0000ff), createCar(0x00ff00), createCar(0xff0000)];
+let visibleCars = [
+    createCar(0x0000ff),
+    createCar(0x00ff00),
+    createCar(0xff0000),
+];
 let visibleCarsIndex = 0;
+const clones = [];
 
 const addCar = () => {
-    visibleCars[visibleCarsIndex].position.y = window.innerHeight / 2 + 50;
-    scene.add(visibleCars[visibleCarsIndex]);
+    const clone = visibleCars[visibleCarsIndex].clone();
+    clone.position.y = height / 2 - 150;
+
+    const lane = Math.random() * 3;
+
+    if (lane < 0.7) clone.position.x = Math.random() > 0.5 ? -90 : -70;
+    else if (lane > 2.3) clone.position.x = Math.random() > 0.5 ? -10 : 10;
+    else clone.position.x = Math.random() > 0.5 ? 90 : 70;
+
+    clone.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI);
+    scene.add(clone);
+
+    clones.push(clone);
     visibleCarsIndex = (visibleCarsIndex + 1) % visibleCars.length;
-    
+};
+
+const hitDetection = () => {
+    // Check if any obstacle is touching the car/player
+    let hit = false
+    clones.forEach((vCar) => {
+        if (
+            vCar.position.x < car.position.x + 30 &&
+            vCar.position.x > car.position.x - 30 &&
+            vCar.position.y < car.position.y + 50 &&
+            vCar.position.y > car.position.y - 50
+        ) {
+            console.log("Hit");
+            hit = true
+        }
+    });
+    return hit;
 }
 
 const animation = (height) => {
@@ -208,43 +244,58 @@ const animation = (height) => {
     plane.material.map.wrapS = THREE.RepeatWrapping;
     plane.material.map.wrapT = THREE.RepeatWrapping;
 
+    clones.forEach((vCar) => {
+        vCar.position.y -= 1.5;
+        if (vCar.position.y < -height / 2 - 100) {
+            scene.remove(vCar);
+
+            clones.splice(clones.indexOf(vCar), 1);
+
+            vCar.position.y = height / 2 - 150;
+        }
+    });
+
     if (car.position.y > height / 2 - 30) {
         car.position.y = -height / 2 + 30;
     }
 
-    if (keyState['ArrowUp'] || keyState['KeyW']){
+    if (keyState["ArrowUp"] || keyState["KeyW"]) {
         if (car.position.y < height / 2 - 140) car.position.y += 1.5;
-    }    
-    if (keyState['ArrowDown'] || keyState['KeyS']){
+    }
+    if (keyState["ArrowDown"] || keyState["KeyS"]) {
         if (car.position.y > -height / 2 + 130) car.position.y -= 1.5;
     }
-    if (keyState['ArrowLeft'] || keyState['KeyA']){
+    if (keyState["ArrowLeft"] || keyState["KeyA"]) {
         if (car.position.x > -100) car.position.x -= 3;
     }
-    if (keyState['ArrowRight'] || keyState['KeyD']){
+    if (keyState["ArrowRight"] || keyState["KeyD"]) {
         if (car.position.x < 100) car.position.x += 3;
     }
-
-    visibleCars.forEach((vCar) => {
-        vCar.position.y -= 1.5;
-        console.log(height / 2 - 150);
-        if (vCar.position.y > window.innerHeight) {
-            scene.remove(vCar);
-            vCar.position.y = height / 2 - 150;
-        }
-    });
+    const hit = hitDetection();
+    if (hit) {
+        renderer.setAnimationLoop(null);
+        console.log("Game Over");
+    }
 
     renderer.render(scene, camera);
 };
 
 renderer.setAnimationLoop(() => animation(window.innerHeight));
 
-var keyState = {};    
-window.addEventListener('keydown',function(e){
-    keyState[e.code] = true;
-},true);    
-window.addEventListener('keyup',function(e){
-    keyState[e.code] = false;
-},true);
+var keyState = {};
+window.addEventListener(
+    "keydown",
+    function (e) {
+        keyState[e.code] = true;
+    },
+    true
+);
+window.addEventListener(
+    "keyup",
+    function (e) {
+        keyState[e.code] = false;
+    },
+    true
+);
 
 setInterval(addCar, 1000);
