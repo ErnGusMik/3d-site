@@ -23,7 +23,7 @@ const camera = new THREE.OrthographicCamera(
     1000
 );
 
-camera.position.set(0, 0, 300);
+camera.position.set(0, -160, 300);
 camera.lookAt(0, 0, 0);
 
 const createLines = (width, height) => {
@@ -32,56 +32,43 @@ const createLines = (width, height) => {
     canvas.height = height;
     const context = canvas.getContext("2d");
 
-    context.fillStyle = "#546e90";
+    context.fillStyle = "#243142";
     context.fillRect(0, 0, width, height);
 
     context.lineWidth = 2;
-    context.strokeStyle = "#e0ffff";
+    context.strokeStyle = "#fff";
     context.setLineDash([10, 14]);
 
     context.beginPath();
-    context.arc(
-        width / 2,
-        height / 2,
-        250,
-        0,
-        2 * Math.PI
-    );
+    context.moveTo(width / 2 - 40, 0);
+    context.lineTo(width / 2 - 40, height);
+    context.moveTo(width / 2 + 40, 0);
+    context.lineTo(width / 2 + 40, height);
     context.stroke();
 
     return new THREE.CanvasTexture(canvas);
 };
 
-const getIsland = () => {
-    const island = new THREE.Shape();
+const getLeftField = (width, height) => {
+    const field = new THREE.Shape()
 
-    island.absarc(
-        0,
-        0,
-        210,
-        0,
-        Math.PI * 2,
-        false
-    );
+    field.moveTo(-width, -height);
+    field.lineTo(-width, height);
+    field.lineTo(-120, height);
+    field.lineTo(-120, -height);
 
-    return island
+    return field;
 }
 
-const getOuterField = (width, height) => {
-    const field = new THREE.Shape();
+const getRightField = (width, height) => {
+    const field = new THREE.Shape()
 
-    field.moveTo(-width / 2, -height / 2);
-    field.lineTo(-width / 2, height / 2);
+    field.moveTo(width, -height);
+    field.lineTo(width, height);
+    field.lineTo(+120, height);
+    field.lineTo(+120, -height);
 
-    
-    field.absarc(
-        0,
-        0,
-        210,
-        0,
-        Math.PI * 2,
-        false
-    );
+    return field;
 }
 
 const renderMap = (width, height) => {
@@ -91,12 +78,12 @@ const renderMap = (width, height) => {
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     scene.add(plane);
 
-    // Island & rest of the map
+    // Get fields
 
-    const island = getIsland();
-    const outerField = getOuterField(width, height);
+    const leftField = getLeftField(width, height);
+    const rightField = getRightField(width, height);
     
-    const fieldGeometry = new THREE.ExtrudeGeometry([island, outerField], {
+    const fieldGeometry = new THREE.ExtrudeGeometry([leftField, rightField], {
         depth: 6,
         bevelEnabled: false,
     });
@@ -123,7 +110,7 @@ const createWheels = () => {
     return wheel;
 };
 
-const createCar = () => {
+const createCar = (color) => {
     const car = new THREE.Group();
 
     const backWheel = createWheels();
@@ -138,7 +125,7 @@ const createCar = () => {
 
     const main = new THREE.Mesh(
         new THREE.BoxGeometry(60, 30, 15),
-        new THREE.MeshLambertMaterial({ color: 0xa52523 })
+        new THREE.MeshLambertMaterial({ color })
     );
     main.position.z = 12;
     car.add(main);
@@ -202,7 +189,22 @@ const getCarSideTexture = () => {
 };
 
 // Render
-const car = createCar();
+const car = createCar(0xa52523);
+car.position.y = -500;
+car.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 2);
 scene.add(car);
 
-renderer.render(scene, camera);
+// renderer.render(scene, camera);
+
+
+const animation = () => {
+    car.position.y += 0.05;
+    if (car.position.y > 500) {
+        car.position.y = -500;
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animation);
+}
+
+renderer.setAnimationLoop(animation);
