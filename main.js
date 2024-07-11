@@ -151,7 +151,7 @@ const createCar = (color) => {
     cabin.position.x = -6;
     cabin.position.z = 25.5;
     car.add(cabin);
-
+    car.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 2);
     return car;
 };
 
@@ -189,13 +189,21 @@ const getCarSideTexture = () => {
 // Render
 const car = createCar(0xa52523);
 car.position.y = -window.innerHeight / 2 + 150;
-car.rotateOnAxis(new THREE.Vector3(0, 0, 1), Math.PI / 2);
 scene.add(car);
 
+let visibleCars = [createCar(0x0000ff), createCar(0x00ff00), createCar(0xff0000)];
+let visibleCarsIndex = 0;
+
+const addCar = () => {
+    visibleCars[visibleCarsIndex].position.y = window.innerHeight / 2 + 50;
+    scene.add(visibleCars[visibleCarsIndex]);
+    visibleCarsIndex = (visibleCarsIndex + 1) % visibleCars.length;
+    
+}
 
 const animation = (height) => {
     // Animate plane texture so it moves downward infinitely
-    plane.material.map.offset.y += 0.005;
+    plane.material.map.offset.y += 0.002;
     // Make sure texture doesn't end
     plane.material.map.wrapS = THREE.RepeatWrapping;
     plane.material.map.wrapT = THREE.RepeatWrapping;
@@ -204,12 +212,27 @@ const animation = (height) => {
         car.position.y = -height / 2 + 30;
     }
 
-    if (keyState[37] || keyState[65]){
-        x -= 1;
+    if (keyState['ArrowUp'] || keyState['KeyW']){
+        if (car.position.y < height / 2 - 140) car.position.y += 1.5;
     }    
-    if (keyState[39] || keyState[68]){
-        x += 1;
+    if (keyState['ArrowDown'] || keyState['KeyS']){
+        if (car.position.y > -height / 2 + 130) car.position.y -= 1.5;
     }
+    if (keyState['ArrowLeft'] || keyState['KeyA']){
+        if (car.position.x > -100) car.position.x -= 3;
+    }
+    if (keyState['ArrowRight'] || keyState['KeyD']){
+        if (car.position.x < 100) car.position.x += 3;
+    }
+
+    visibleCars.forEach((vCar) => {
+        vCar.position.y -= 1.5;
+        console.log(height / 2 - 150);
+        if (vCar.position.y > window.innerHeight) {
+            scene.remove(vCar);
+            vCar.position.y = height / 2 - 150;
+        }
+    });
 
     renderer.render(scene, camera);
 };
@@ -218,8 +241,10 @@ renderer.setAnimationLoop(() => animation(window.innerHeight));
 
 var keyState = {};    
 window.addEventListener('keydown',function(e){
-    keyState[e.keyCode || e.which] = true;
+    keyState[e.code] = true;
 },true);    
 window.addEventListener('keyup',function(e){
-    keyState[e.keyCode || e.which] = false;
+    keyState[e.code] = false;
 },true);
+
+setInterval(addCar, 1000);
