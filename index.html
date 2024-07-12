@@ -3,10 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Three.js game</title>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+    <div class="scoreCounter">
+        <h2>0</h2>
+    </div>
+    <div class="overlay" id="gameStartOverlay">
+        <div class="overlayData">
+            <h1>Three.js game</h1>
+            <p>Use W/A/S/D or arrow buttons to move your car and avoid the oncoming obstacles. Try and get as far as you can!</p>
+            <h3>Click anywhere to start</h3>
+        </div>
+    </div>
+    <div class="overlay" id="gameOverOverlay">
+        <div class="overlayData">
+            <h1>Game over!</h1>
+            <p>You reached a score of: </p>
+            <h3>Click anywhere to restart</h3>
+        </div>
+    </div>
     <script src="./main.js" type="module"></script>
 </body>
 </html>

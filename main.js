@@ -202,8 +202,11 @@ let visibleCars = [
 ];
 let visibleCarsIndex = 0;
 const clones = [];
+let level = 1;
+let running = false;
 
 const addCar = () => {
+    if (!running) return;
     const clone = visibleCars[visibleCarsIndex].clone();
     clone.position.y = height / 2 - 150;
 
@@ -227,8 +230,8 @@ const hitDetection = () => {
         if (
             vCar.position.x < car.position.x + 30 &&
             vCar.position.x > car.position.x - 30 &&
-            vCar.position.y < car.position.y + 50 &&
-            vCar.position.y > car.position.y - 50
+            vCar.position.y < car.position.y + 65 &&
+            vCar.position.y > car.position.y - 65
         ) {
             console.log("Hit");
             hit = true
@@ -237,15 +240,22 @@ const hitDetection = () => {
     return hit;
 }
 
+
+
 const animation = (height) => {
     // Animate plane texture so it moves downward infinitely
-    plane.material.map.offset.y += 0.002;
+    plane.material.map.offset.y += level === 1 ? 0.002 : level === 2 ? 0.003 : 0.004;
     // Make sure texture doesn't end
     plane.material.map.wrapS = THREE.RepeatWrapping;
     plane.material.map.wrapT = THREE.RepeatWrapping;
 
+    if (!running) {
+        renderer.render(scene, camera);
+        return;
+    };
+
     clones.forEach((vCar) => {
-        vCar.position.y -= 1.5;
+        vCar.position.y -= level === 1 ? 1.5 : level === 2 ? 2.5 : 3.5;
         if (vCar.position.y < -height / 2 - 100) {
             scene.remove(vCar);
 
@@ -274,13 +284,13 @@ const animation = (height) => {
     const hit = hitDetection();
     if (hit) {
         renderer.setAnimationLoop(null);
+        running = false;
         console.log("Game Over");
     }
 
     renderer.render(scene, camera);
 };
 
-renderer.setAnimationLoop(() => animation(window.innerHeight));
 
 var keyState = {};
 window.addEventListener(
@@ -299,3 +309,31 @@ window.addEventListener(
 );
 
 setInterval(addCar, 1000);
+
+setTimeout(() => {
+    if (!running) return;
+    level = 2;
+    setTimeout(() => {
+        if (!running) return;
+        level = 3;
+    }, 10000);
+}, 10000);
+
+const updateScore = () => {
+    if (!running) return;
+    const score = document.querySelector('.scoreCounter h2')
+    score.innerText = parseInt(score.innerText) + 1
+}
+
+setInterval(updateScore, 1000)
+
+// Game start
+const startGame = () => {
+    document.querySelector('#gameStartOverlay').style = 'display: none;'
+    running = true
+    window.removeEventListener('click', startGame)
+}
+
+window.addEventListener('click', startGame)
+
+renderer.setAnimationLoop(() => animation(window.innerHeight));
