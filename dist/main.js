@@ -1,8 +1,3 @@
-// Please note: this is my first time creating a 3d website, I am learning, hence the slow progress :)
-
-// TODO: increase speed over time
-// TODO: add score counter
-// TODO: add game start & over screens
 import * as THREE from "three";
 
 const scene = new THREE.Scene();
@@ -200,10 +195,12 @@ let visibleCars = [
     createCar(0x00ff00),
     createCar(0xff0000),
 ];
+
 let visibleCarsIndex = 0;
-const clones = [];
+let clones = [];
 let level = 1;
 let running = false;
+let highScore = 0
 
 const addCar = () => {
     if (!running) return;
@@ -285,7 +282,11 @@ const animation = (height) => {
     if (hit) {
         renderer.setAnimationLoop(null);
         running = false;
-        console.log("Game Over");
+        document.querySelector('#gameOverOverlay').style = 'display: flex;'
+        document.querySelector('#score').innerText = 'You reached a score of: ' + document.querySelector('.scoreCounter h2').innerText
+        document.querySelector('#highScore').innerText = 'Your highscore is: ' + highScore
+        document.querySelector('.scoreCounter h2').innerText = 0
+        window.addEventListener('click', startGame)
     }
 
     renderer.render(scene, camera);
@@ -308,13 +309,16 @@ window.addEventListener(
     true
 );
 
-setInterval(addCar, 1000);
+const carInterval = setInterval(addCar, 1000);
 
+// Increase level over time
 setTimeout(() => {
     if (!running) return;
     level = 2;
     setTimeout(() => {
         if (!running) return;
+        clearInterval(carInterval);
+        setInterval(addCar, 500);
         level = 3;
     }, 10000);
 }, 10000);
@@ -323,13 +327,22 @@ const updateScore = () => {
     if (!running) return;
     const score = document.querySelector('.scoreCounter h2')
     score.innerText = parseInt(score.innerText) + 1
+    highScore = parseInt(score.innerText) > highScore ? parseInt(score.innerText) : highScore
 }
 
 setInterval(updateScore, 1000)
 
 // Game start
 const startGame = () => {
+    car.position.y = -window.innerHeight / 2 + 150;
     document.querySelector('#gameStartOverlay').style = 'display: none;'
+    document.querySelector('#gameOverOverlay').style = 'display: none;'
+    clones.forEach((vCar) => {
+        scene.remove(vCar);
+    });
+    clones = []
+    renderer.setAnimationLoop(null);
+    renderer.setAnimationLoop(() => animation(window.innerHeight));
     running = true
     window.removeEventListener('click', startGame)
 }
